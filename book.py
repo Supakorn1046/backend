@@ -1,62 +1,103 @@
 from flask import request,Flask,jsonify
+from pymongo.mongo_client import MongoClient
+#from flask_basicauth import BasicAuth
 
 app = Flask(__name__) 
+uri = "mongodb+srv://korn30201:gonza092568@cluster0.hmzq13x.mongodb.net/"
 
-books=[
-    {"id":1,"title":"Book 1","author":"Author 1"},
-    {"id":2,"title":"Book 2","author":"Author 2"},
-    {"id":3,"title":"Book 3","author":"Author 3"}
-]
+app.config['BASIC_AUTH_USERNAME']='username'
+app.config['BASIC_AUTH_PASSWORD']='password'
+#basic_auth = BasicAuth(app)
+
+client = MongoClient(uri)
+db = client["students"]
+collection = db["std_info"]
+
+
+stds=[]
+all_students = collection.find()
+for std in all_students:
+    stds.append(std)
+
 @app.route("/")
 def Greet():
-    
-    
-    return "<p>Welcome to Book Management Systems</p>"
+    return "<p>Welcome to Student Management API</p>"
 
-@app.route("/books",methods=["GET"])
-def get_all_books():
-    return jsonify({"books":books})
+@app.route("/students",methods=["GET"])
+#@basic_auth.required
+def get_all_stds():
+    return jsonify({"students":stds})
+         
 
-@app.route("/books/<int:book_id>",methods=["GET"])
-def get_book(book_id):
-    book =  next(( b for b in books if b["id"]==book_id ),None)
-    if book:
-        return jsonify(book)
+@app.route("/students/<int:std_id>",methods=["GET"])
+#@basic_auth.required
+def get_std(std_id):
+    for s in stds:
+        std_id = str(std_id)
+        if  s["_id"] == std_id:
+            student = s
+            break
+        else:
+            student = None
+    if student:
+        return jsonify(student)
     else:
-        return jsonify({"error":"Book not found"}),404
+        return jsonify({"error":"Student not found"}),404
 
-@app.route("/books",methods=["POST"])
-def create_book():
+@app.route("/students",methods=["POST"])
+#@basic_auth.required
+def create_std():
     data = request.get_json()
-    new_book={
-        "id":len(books)+1,
-        "title":data["title"],
-        "author":data["author"]
+    new_std={
+        "_id":data["_id"],
+        "fullname":data["fullname"],
+        "major":data["major"],
+        "gpa":data["gpa"]
     }
-    books.append(new_book)
-    return jsonify(new_book),201
+    for s in stds:
+        sd = str(new_std["_id"])
+        if sd == s["_id"]:
+            return jsonify({"error":"Cannot create new student"}),500
+    stds.append(new_std)
+    collection.insert_one({
+        "_id":data["_id"],
+        "fullname":data["fullname"],
+        "major":data["major"],
+        "gpa":data["gpa"]
+    })
+    return jsonify(new_std),200
 
-@app.route("/books/<int:book_id>",methods=["PUT"])
-def update_book(book_id):
-    book = next((b for b in books if b["id"]==book_id),None)
-    if book:
+
+@app.route("/students/<int:std_id>",methods=["PUT"])
+def update_std(std_id):
+    std_id = str(std_id)
+    student = next((s for s in stds if s["_id"]==std_id),None)
+    if student:
         data = request.get_json()
-        book.update(data)
-        return jsonify(book)
+        student.update(data)
+        collection.update_many( {"_id":student["_id"]},
+                                {"$set":{"fullname":student["fullname"],
+                                        "major":student["major"],
+                                        "gpa":student["gpa"]
+                                        }
+                                })
+        return jsonify(student),200
     else:
-        return jsonify({"error":"Book not found"}),404
+        return jsonify({"error":"Student not found"}),404
 
 
 
 
-@app.route("/books/<int:book_id>",methods=["DELETE"])
-def delete_book(book_id):
-    book = next((b for b in books if b["id"]==book_id),None)
-    if book:
-        books.remove(book)
-        return jsonify({"message":"Book deleted successfully"}),200
+@app.route("/students/<int:std_id>",methods=["DELETE"])
+def delete_std(std_id):
+    std_id = str(std_id)
+    student = next((s for s in stds if s["_id"]==std_id),None)
+    if student:
+        stds.remove(student)
+        collection.delete_one({"_id":std_id})
+        return jsonify({"message":"Student deleted successfully"}),200
     else:
-        return jsonify({"error":"Book not found"}),404
+        return jsonify({"error":"Student not found"}),404
     
 
 
