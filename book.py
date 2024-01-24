@@ -58,14 +58,7 @@ def create_std():
         "gpa":data["gpa"]
     }
     
-    
 
-
-
-
-
-
-    
     
     for s in stds:
         sd = str(new_std["_id"])
