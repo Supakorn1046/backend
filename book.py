@@ -60,6 +60,9 @@ def create_std():
     
 
     
+    
+    
+    
     for s in stds:
         sd = str(new_std["_id"])
         if sd == s["_id"]:
