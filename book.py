@@ -78,7 +78,6 @@ def create_std():
     })
     return jsonify(new_std),200
 
-
 @app.route("/students/<int:std_id>",methods=["PUT"])
 def update_std(std_id):
     std_id = str(std_id)
