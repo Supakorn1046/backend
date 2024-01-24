@@ -52,11 +52,19 @@ def create_std():
         "_id":data["_id"],
         "fullname":data["fullname"],
         "major":data["major"],
+       
+        
+        
         "gpa":data["gpa"]
     }
+    
+    
+    
     for s in stds:
         sd = str(new_std["_id"])
         if sd == s["_id"]:
+     
+     
             return jsonify({"error":"Cannot create new student"}),500
     stds.append(new_std)
     collection.insert_one({
