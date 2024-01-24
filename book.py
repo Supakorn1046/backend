@@ -9,7 +9,9 @@ books=[
 ]
 @app.route("/")
 def Greet():
+    
     return "<p>Welcome to Student Management Systems</p>"
+
 
 @app.route("/books",methods=["GET"])
 def get_all_books():
